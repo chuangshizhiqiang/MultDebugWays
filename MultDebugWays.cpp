@@ -388,6 +388,11 @@ int main(int argc, char* argv[])
 		}
 	}
 
+
+	/*
+		todo:判断进程父进程
+	*/
+
 /*********************************************************************************************************
 	anti 调试
 *********************************************************************************************************/
@@ -412,6 +417,26 @@ int main(int argc, char* argv[])
 	if (forbiddenDebugger()) {
 		DBGPRINT("[ERROR] forbiddenDebugger error!\r\n")
 		return -1;
+	}
+#endif
+
+#if 0
+	/*
+		简单 hook R3 的 DbgBreakPoint ，也可以进行复杂点的inline hook 实现自动判断是否有调试器附加然后自尽、
+		此简单方法可以使得调试器无法自动中断
+		Debugger
+		DbgActiveProcess -> DbgUiDebugActiveProcess ->	ZwDebugActiveProcess
+														DbgUiIssueRemoteBreakin -> ZwCreateThreadEx(DbgUiRemoteBreakin)
+
+		Debuggee
+		DbgUiRemoteBreakin -> DbgBreakPoint
+	*/
+	{
+		DWORD oldProtect = 0;
+		auto pvAddr = GetProcAddress(GetModuleHandle(L"ntdll.dll"), "DbgBreakPoint");
+		VirtualProtect(pvAddr, 1, PAGE_EXECUTE_READWRITE, &oldProtect);
+
+		*((char*)pvAddr) = 0x90;
 	}
 #endif
 
